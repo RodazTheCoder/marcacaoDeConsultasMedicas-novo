@@ -32,21 +32,20 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit }) => {
    const [dateInput, setDateInput] = useState('');
    const [selectedTime, setSelectedTime] = useState<string>('');
    const [description, setDescription] = useState('');
-   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('');
-   
-   // Estados para dados da API
+
+   // ✅ Estados para dados da API
    const [doctors, setDoctors] = useState<User[]>([]);
    const [specialties, setSpecialties] = useState<Specialty[]>([]);
+   const [selectedSpecialty, setSelectedSpecialty] = useState<string>('');
    const [loading, setLoading] = useState(true);
-   
+
    const timeSlots = generateTimeSlots();
 
-   // Carrega especialidades e médicos ao montar o componente
+   // ✅ Carregamento inicial de dados
    useEffect(() => {
       loadInitialData();
    }, []);
 
-   // Carrega médicos quando uma especialidade é selecionada
    useEffect(() => {
       if (selectedSpecialty) {
          loadDoctorsBySpecialty(selectedSpecialty);
@@ -58,15 +57,13 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit }) => {
    const loadInitialData = async () => {
       try {
          setLoading(true);
-         const [specialtiesData, doctorsData] = await Promise.all([
+         const [specialtiesData] = await Promise.all([
             specialtiesApiService.getAllSpecialties(),
-            authApiService.getAllDoctors(),
          ]);
-         
          setSpecialties(specialtiesData);
-         setDoctors(doctorsData);
+         await loadAllDoctors();
       } catch (error) {
-         console.error('Erro ao carregar dados:', error);
+         console.error('Erro ao carregar dados iniciais:', error);
          Alert.alert('Erro', 'Não foi possível carregar os dados. Tente novamente.');
       } finally {
          setLoading(false);
@@ -86,8 +83,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit }) => {
       try {
          const doctorsData = await authApiService.getDoctorsBySpecialty(specialty);
          setDoctors(doctorsData);
-         // Reset da seleção de médico quando muda a especialidade
-         setSelectedDoctor('');
+         setSelectedDoctor(''); // reseta seleção ao mudar especialidade
       } catch (error) {
          console.error('Erro ao carregar médicos por especialidade:', error);
       }
@@ -108,10 +104,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit }) => {
    };
 
    const handleDateChange = (text: string) => {
-      // Remove todos os caracteres não numéricos
       const numbers = text.replace(/\D/g, '');
-      
-      // Formata a data enquanto digita
       let formattedDate = '';
       if (numbers.length > 0) {
          if (numbers.length <= 2) {
@@ -122,7 +115,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit }) => {
             formattedDate = `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
          }
       }
-
       setDateInput(formattedDate);
    };
 
@@ -149,8 +141,6 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit }) => {
    };
 
    const isTimeSlotAvailable = (time: string) => {
-      // Aqui você pode adicionar lógica para verificar se o horário está disponível
-      // Por exemplo, verificar se já existe uma consulta agendada para este horário
       return true;
    };
 
@@ -166,7 +156,7 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit }) => {
       <Container>
          <Title>Selecione a Especialidade</Title>
          <SpecialtyContainer>
-            <SpecialtyButton 
+            <SpecialtyButton
                selected={selectedSpecialty === ''}
                onPress={() => setSelectedSpecialty('')}
             >
@@ -199,8 +189,8 @@ const AppointmentForm: React.FC<AppointmentFormProps> = ({ onSubmit }) => {
                   <DoctorInfo>
                      <DoctorName>{doctor.name}</DoctorName>
                      <DoctorSpecialty>
-                        {doctor.role === 'doctor' && 'specialty' in doctor 
-                           ? doctor.specialty 
+                        {doctor.role === 'doctor' && 'specialty' in doctor
+                           ? doctor.specialty
                            : 'Especialidade não informada'}
                      </DoctorSpecialty>
                   </DoctorInfo>
@@ -278,7 +268,7 @@ const DoctorList = styled.ScrollView`
   margin-bottom: ${theme.spacing.large}px;
 `;
 
-const DoctorCard = styled(TouchableOpacity)<{ selected: boolean }>`
+const DoctorCard = styled(TouchableOpacity) <{ selected: boolean }>`
   flex-direction: row;
   align-items: center;
   padding: ${theme.spacing.medium}px;
@@ -331,33 +321,33 @@ const TimeSlotsGrid = styled.View`
   gap: ${theme.spacing.small}px;
 `;
 
-const TimeSlotButton = styled(TouchableOpacity)<{ selected: boolean; disabled: boolean }>`
-  background-color: ${(props: { selected: boolean; disabled: boolean }) => 
-    props.disabled 
-      ? theme.colors.background 
-      : props.selected 
-        ? theme.colors.primary 
-        : theme.colors.white};
+const TimeSlotButton = styled(TouchableOpacity) <{ selected: boolean; disabled: boolean }>`
+  background-color: ${(props: { selected: boolean; disabled: boolean }) =>
+      props.disabled
+         ? theme.colors.background
+         : props.selected
+            ? theme.colors.primary
+            : theme.colors.white};
   padding: ${theme.spacing.small}px ${theme.spacing.medium}px;
   border-radius: 8px;
   border-width: 1px;
-  border-color: ${(props: { selected: boolean; disabled: boolean }) => 
-    props.disabled 
-      ? theme.colors.background 
-      : props.selected 
-        ? theme.colors.primary 
-        : theme.colors.text};
+  border-color: ${(props: { selected: boolean; disabled: boolean }) =>
+      props.disabled
+         ? theme.colors.background
+         : props.selected
+            ? theme.colors.primary
+            : theme.colors.text};
   opacity: ${(props: { disabled: boolean }) => props.disabled ? 0.5 : 1};
 `;
 
-const TimeSlotText = styled(Text)<{ selected: boolean; disabled: boolean }>`
+const TimeSlotText = styled(Text) <{ selected: boolean; disabled: boolean }>`
   font-size: ${theme.typography.body.fontSize}px;
-  color: ${(props: { selected: boolean; disabled: boolean }) => 
-    props.disabled 
-      ? theme.colors.text 
-      : props.selected 
-        ? theme.colors.white 
-        : theme.colors.text};
+  color: ${(props: { selected: boolean; disabled: boolean }) =>
+      props.disabled
+         ? theme.colors.text
+         : props.selected
+            ? theme.colors.white
+            : theme.colors.text};
 `;
 
 const InputContainer = {
@@ -378,22 +368,22 @@ const SpecialtyContainer = styled.View`
   margin-bottom: ${theme.spacing.large}px;
 `;
 
-const SpecialtyButton = styled(TouchableOpacity)<{ selected: boolean }>`
-  background-color: ${(props: { selected: boolean }) => 
-    props.selected ? theme.colors.primary : theme.colors.white};
+const SpecialtyButton = styled(TouchableOpacity) <{ selected: boolean }>`
+  background-color: ${(props: { selected: boolean }) =>
+      props.selected ? theme.colors.primary : theme.colors.white};
   padding: ${theme.spacing.small}px ${theme.spacing.medium}px;
   border-radius: 20px;
   border-width: 1px;
-  border-color: ${(props: { selected: boolean }) => 
-    props.selected ? theme.colors.primary : theme.colors.border};
+  border-color: ${(props: { selected: boolean }) =>
+      props.selected ? theme.colors.primary : theme.colors.border};
   margin-bottom: ${theme.spacing.small}px;
 `;
 
-const SpecialtyText = styled(Text)<{ selected: boolean }>`
+const SpecialtyText = styled(Text) <{ selected: boolean }>`
   font-size: ${theme.typography.body.fontSize}px;
-  color: ${(props: { selected: boolean }) => 
-    props.selected ? theme.colors.white : theme.colors.text};
+  color: ${(props: { selected: boolean }) =>
+      props.selected ? theme.colors.white : theme.colors.text};
   text-align: center;
 `;
 
-export default AppointmentForm; 
+export default AppointmentForm;

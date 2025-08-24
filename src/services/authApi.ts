@@ -16,6 +16,7 @@ interface ApiUser {
   nome: string;
   email: string;
   tipo: 'ADMIN' | 'MEDICO' | 'PACIENTE';
+  especialidade?: string;
 }
 
 /**
@@ -27,7 +28,6 @@ export const authApiService = {
    */
   async signIn(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // Faz a requisição de login
       const loginResponse = await apiClient.post<ApiLoginResponse>(
         API_ENDPOINTS.LOGIN,
         {
@@ -36,10 +36,8 @@ export const authApiService = {
         }
       );
 
-      // Define o token no cliente da API
       apiClient.setToken(loginResponse.token);
 
-      // Busca os dados do usuário
       const userData = await this.getCurrentUser();
 
       return {
@@ -53,19 +51,17 @@ export const authApiService = {
   },
 
   /**
-   * Registra um novo usuário (paciente)
+   * Registra um novo usuário (paciente ou admin)
    */
-  async register(data: RegisterData): Promise<AuthResponse> {
+  async register(data: RegisterData & { userType?: 'PACIENTE' | 'ADMIN' }): Promise<AuthResponse> {
     try {
-      // Cria o usuário
-      const newUser = await apiClient.post<ApiUser>(API_ENDPOINTS.REGISTER, {
+      await apiClient.post<ApiUser>(API_ENDPOINTS.REGISTER, {
         nome: data.name,
         email: data.email,
         senha: data.password,
-        tipo: 'PACIENTE',
+        tipo: data.userType || 'PACIENTE', // ✅ envia o tipo correto
       });
 
-      // Faz login automaticamente após o registro
       return await this.signIn({
         email: data.email,
         password: data.password,
@@ -81,7 +77,6 @@ export const authApiService = {
    */
   async getCurrentUser(): Promise<User> {
     try {
-      // Busca o usuário atual usando o endpoint específico que utiliza o JWT
       const currentUser = await apiClient.get<ApiUser>(API_ENDPOINTS.CURRENT_USER);
       return this.mapApiUserToUser(currentUser);
     } catch (error) {
@@ -90,9 +85,7 @@ export const authApiService = {
     }
   },
 
-  /**
-   * Busca todos os médicos
-   */
+  // Buscar todos os médicos
   async getAllDoctors(): Promise<User[]> {
     try {
       const doctors = await apiClient.get<ApiUser[]>(API_ENDPOINTS.DOCTORS);
@@ -103,9 +96,7 @@ export const authApiService = {
     }
   },
 
-  /**
-   * Busca médicos por especialidade
-   */
+  // Buscar médicos por especialidade
   async getDoctorsBySpecialty(specialty: string): Promise<User[]> {
     try {
       const doctors = await apiClient.get<ApiUser[]>(
@@ -122,19 +113,25 @@ export const authApiService = {
    * Faz logout
    */
   async signOut(): Promise<void> {
-    // Remove o token do cliente da API
     apiClient.setToken(null);
   },
 
-  /**
-   * Mapeia um usuário da API para o formato usado no frontend
-   */
+  // Mapeamento da API para frontend com ícone genérico para admins
   mapApiUserToUser(apiUser: ApiUser): User {
+    // Ícone genérico para admin, fotos aleatórias para médicos/pacientes
+    let image: string;
+    if (apiUser.tipo === 'ADMIN') {
+      // Ícone de avatar para admins - SVG simples codificado em Base64
+      image = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjUwIiBmaWxsPSIjNjY2NjY2Ii8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iMzUiIHI9IjE1IiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNNTAgNjVDMzUgNjUgMjUgNzUgMjUgODVWOTVINzVWODVDNzUgNzUgNjUgNjUgNTAgNjVaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K';
+    } else {
+      image = `https://randomuser.me/api/portraits/${apiUser.id % 2 === 0 ? 'men' : 'women'}/${(apiUser.id % 10) + 1}.jpg`;
+    }
+
     const baseUser = {
       id: apiUser.id.toString(),
       name: apiUser.nome,
       email: apiUser.email,
-      image: `https://randomuser.me/api/portraits/${apiUser.id % 2 === 0 ? 'men' : 'women'}/${(apiUser.id % 10) + 1}.jpg`,
+      image,
     };
 
     switch (apiUser.tipo) {
@@ -147,7 +144,7 @@ export const authApiService = {
         return {
           ...baseUser,
           role: 'doctor' as const,
-          specialty: 'Especialidade não informada', // TODO: Buscar da API de especialidades
+          specialty: apiUser.especialidade || 'Especialidade não informada',
         };
       case 'PACIENTE':
         return {
