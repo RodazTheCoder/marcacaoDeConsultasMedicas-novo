@@ -7,7 +7,7 @@ import { RootStackParamList } from '../types/navigation';
 // Screens
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
-import HomeScreen from '../screens/HomeScreen';
+import HomeScreen from '../screens/HomeScreen/components/AppointmentCard';
 import CreateAppointmentScreen from '../screens/CreateAppointmentScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
