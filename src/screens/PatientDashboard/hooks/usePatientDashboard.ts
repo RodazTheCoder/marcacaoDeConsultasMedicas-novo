@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '/Users/rodaz/Desktop/MarcacaoConsultasFront/marcacaoDeConsultasMedicas-novo/src/contexts/AuthContext';
+import { useAuth } from '../../../contexts/AuthContext';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '/Users/rodaz/Desktop/MarcacaoConsultasFront/marcacaoDeConsultasMedicas-novo/src/types/navigation';
+import { RootStackParamList } from '../../../types/navigation';
 
 type Appointment = {
   id: string;
