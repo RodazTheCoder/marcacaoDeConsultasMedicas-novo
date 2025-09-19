@@ -12,7 +12,7 @@ import CreateAppointmentScreen from '../screens/CreateAppointmentScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import AdminDashboardScreen from '../screens/AdminDashboardScreen';
 import DoctorDashboardScreen from '../screens/DoctorDashboardScreen';
-import PatientDashboardScreen from '../screens/PatientDashboardScreen';
+import PatientDashboardScreen from '../screens/PatientDashboard';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
