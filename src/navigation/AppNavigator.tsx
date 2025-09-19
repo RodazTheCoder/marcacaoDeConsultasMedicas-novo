@@ -10,7 +10,7 @@ import RegisterScreen from '../screens/Register';
 import HomeScreen from '../screens/HomeScreen/components/AppointmentCard';
 import CreateAppointmentScreen from '../screens/CreateAppointmentScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import AdminDashboardScreen from '../screens/AdminDashboardScreen';
+import AdminDashboardScreen from '../screens/AdminDashboard';
 import DoctorDashboardScreen from '../screens/DoctorDashboard';
 import PatientDashboardScreen from '../screens/PatientDashboard';
 
